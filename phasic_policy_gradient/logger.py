@@ -187,6 +187,7 @@ class TensorBoardOutputFormat(KVWriter):
         from tensorflow.python import pywrap_tensorflow
         from tensorflow.core.util import event_pb2
         from tensorflow.python.util import compat
+        # import tensorflow.python._pywrap_events_writer as pywrap_tensorflow
 
         self.tf = tf
         self.event_pb2 = event_pb2

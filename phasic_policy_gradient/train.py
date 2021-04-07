@@ -5,6 +5,13 @@ from . import torch_util as tu
 from .impala_cnn import ImpalaEncoder
 from . import logger
 from .envs import get_venv
+from .data_augs import RandGray
+from .data_augs import Cutout
+from .data_augs import Cutout_Color
+from .data_augs import Rand_Flip
+from .data_augs import Rand_Rotate
+from .data_augs import Rand_Crop
+from .data_augs import ColorJitterLayer
 
 def train_fn(env_name="fruitbot",
     distribution_mode="easy",
@@ -12,8 +19,8 @@ def train_fn(env_name="fruitbot",
     # 'shared' = shared policy and value networks
     # 'dual' = separate policy and value networks
     # 'detach' = shared policy and value networks, but with the value function gradient detached during the policy phase to avoid interference
-    interacts_total=50_000_000,
-    num_envs=8,
+    interacts_total=10_000_000,
+    num_envs=1,
     n_epoch_pi=1,
     n_epoch_vf=1,
     gamma=.999,
@@ -27,8 +34,9 @@ def train_fn(env_name="fruitbot",
     n_pi=32,
     beta_clone=1.0,
     vf_true_weight=1.0,
-    log_dir='/tmp/ppg',
-    comm=None):
+    log_dir='results/tmp/ppg_16_10_100_colorjittertest',
+    comm=None,
+    which_aug=None):
     if comm is None:
         comm = MPI.COMM_WORLD
     tu.setup_dist(comm=comm)
@@ -39,8 +47,9 @@ def train_fn(env_name="fruitbot",
         format_strs = ['csv', 'stdout', "tensorboard"] if comm.Get_rank() == 0 else []
         logger.configure(comm=comm, dir=log_dir, format_strs=format_strs)
 
-    venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode)
-
+    venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode, num_levels=100, start_level=0)
+    print(venv, env_name, distribution_mode)
+    eval_venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode, num_levels=10, start_level=100)
     enc_fn = lambda obtype: ImpalaEncoder(
         obtype.shape,
         outsize=256,
@@ -75,12 +84,14 @@ def train_fn(env_name="fruitbot",
         n_pi=n_pi,
         name2coef=name2coef,
         comm=comm,
+        which_aug=which_aug,
+        eval_venv=eval_venv
     )
 
 def main():
     parser = argparse.ArgumentParser(description='Process PPG training arguments.')
     parser.add_argument('--env_name', type=str, default='fruitbot')
-    parser.add_argument('--num_envs', type=int, default=8)
+    parser.add_argument('--num_envs', type=int, default=16)
     parser.add_argument('--n_epoch_pi', type=int, default=1)
     parser.add_argument('--n_epoch_vf', type=int, default=1)
     parser.add_argument('--n_aux_epochs', type=int, default=6)
@@ -88,11 +99,21 @@ def main():
     parser.add_argument('--clip_param', type=float, default=0.2)
     parser.add_argument('--kl_penalty', type=float, default=0.0)
     parser.add_argument('--arch', type=str, default='dual') # 'shared', 'detach', or 'dual'
+    parser.add_argument('--data_aug', type=str, default='None')
 
     args = parser.parse_args()
 
     comm = MPI.COMM_WORLD
-
+    aug_to_func = {    
+                    'gray':RandGray,
+                    'cutout':Cutout,
+                    'cutout_color':Cutout_Color,
+                    'flip':Rand_Flip,
+                    'rotate':Rand_Rotate,
+                    'color_jitter':ColorJitterLayer,
+                    'crop':Rand_Crop,
+                    'None':lambda b: None
+                    }
     train_fn(
         env_name=args.env_name,
         num_envs=args.num_envs,
@@ -101,7 +122,8 @@ def main():
         n_aux_epochs=args.n_aux_epochs,
         n_pi=args.n_pi,
         arch=args.arch,
-        comm=comm)
+        comm=comm,
+        which_aug=aug_to_func[args.data_aug](args.num_envs))
 
 if __name__ == '__main__':
     main()

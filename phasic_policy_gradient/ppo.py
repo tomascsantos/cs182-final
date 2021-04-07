@@ -12,6 +12,14 @@ from .minibatch_optimize import minibatch_optimize
 from .roller import Roller
 from .reward_normalizer import RewardNormalizer
 
+from .data_augs import RandGray
+from .data_augs import Cutout
+from .data_augs import Cutout_Color
+from .data_augs import Rand_Flip
+from .data_augs import Rand_Rotate
+from .data_augs import Rand_Crop
+from .data_augs import ColorJitterLayer
+
 import math
 from . import logger
 
@@ -137,6 +145,7 @@ def learn(
     comm: "(MPI.Comm) MPI communicator" = None,
     callbacks: "(seq of function(dict)->bool) to run each update" = (),
     learn_state: "dict with optional keys {'opts', 'roller', 'lsh', 'reward_normalizer', 'curr_interact_count', 'seg_buf'}" = None,
+    which_aug=None
 ):
     if comm is None:
         comm = MPI.COMM_WORLD
@@ -197,6 +206,7 @@ def learn(
         initial_state=model.initial_state(venv.num),
         keep_buf=100,
         keep_non_rolling=log_save_opts.get("log_new_eps", False),
+        which_aug=which_aug
     )
 
     lsh = learn_state.get("lsh") or LogSaveHelper(

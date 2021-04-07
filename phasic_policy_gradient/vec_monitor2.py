@@ -4,18 +4,29 @@ from collections import deque, namedtuple
 import numpy as np
 import gym3
 
+
+
+from .data_augs import RandGray
+from .data_augs import Cutout
+from .data_augs import Cutout_Color
+from .data_augs import Rand_Flip
+from .data_augs import Rand_Rotate
+from .data_augs import Rand_Crop
+from .data_augs import ColorJitterLayer
 Episode = namedtuple("Episode", ["ret", "len", "time", "info"])
 
 
 class PostActProcessing(gym3.Wrapper):
     """
-    Call process() after each action, except possibly possibly the last 
+    Call process() after each action, except possibly possibly the last
     one which you never called observe for.
     """
 
-    def __init__(self, env):
+    def __init__(self, env, which_aug=None):
         super().__init__(env)
         self.need_process = False
+        self.data_aug = which_aug
+        self._curr_step = 0
 
     def process_if_needed(self):
         if self.need_process:
@@ -29,7 +40,15 @@ class PostActProcessing(gym3.Wrapper):
 
     def observe(self):
         self.process_if_needed()
-        return self.env.observe()
+        if self.data_aug != None:
+          if self._curr_step % 512 == 0:
+              self.data_aug.change_randomization_params_all()
+          self._curr_step = (self._curr_step +1) % 512
+          obs = self.env.observe()
+          # print(len(obs), obs[0].shape, obs[1].shape, obs[2].shape)
+          return (obs[0], self.data_aug.do_augmentation(obs[1]), obs[2])
+        else:
+          return self.env.observe()
 
     def process(self):
         raise NotImplementedError
@@ -42,11 +61,12 @@ class VecMonitor2(PostActProcessing):
         keep_buf: "(int) how many returns/lengths/infos to keep" = 0,
         keep_sep_eps: "keep separate buffer per env" = False,
         keep_non_rolling: "keep separate buffer that must be explicitly cleared" = False,
+        which_aug=None
     ):
         """
         use n_per_env if you want to keep sep
         """
-        super().__init__(venv)
+        super().__init__(venv, which_aug)
         self.eprets = None
         self.eplens = None
         self.epcount = 0

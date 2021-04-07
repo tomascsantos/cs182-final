@@ -109,8 +109,8 @@ class LogSaveHelper:
             logger.logkv("GpuMaxMemory", th.cuda.max_memory_allocated())
             th.cuda.reset_max_memory_allocated()
 
-        if self.comm.rank == 0:
-            print("RCALL_LOGDIR: ", os.environ["RCALL_LOGDIR"])
+        # if self.comm.rank == 0:
+        #     print("RCALL_LOGDIR: ", os.environ["RCALL_LOGDIR"])
         logger.dumpkvs()
         self.last_time = cur_time
         self.last_ic = self.total_interact_count

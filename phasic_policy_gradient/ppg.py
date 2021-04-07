@@ -9,6 +9,14 @@ from .distr_builder import distr_builder
 from mpi4py import MPI
 from .tree_util import tree_map, tree_reduce
 import operator
+from .data_augs import RandGray
+from .data_augs import Cutout
+from .data_augs import Cutout_Color
+from .data_augs import Rand_Flip
+from .data_augs import Rand_Rotate
+from .data_augs import Rand_Crop
+from .data_augs import ColorJitterLayer
+from .roller import Roller
 
 def sum_nonbatch(logprob_tree):
     """
@@ -227,6 +235,8 @@ def learn(
     interacts_total=float("inf"),
     name2coef=None,
     comm=None,
+    which_aug=None,
+    eval_venv=None
 ):
     """
     Run PPO for X iterations
@@ -238,7 +248,14 @@ def learn(
     ppo_state = None
     aux_state = th.optim.Adam(model.parameters(), lr=aux_lr)
     name2coef = name2coef or {}
-
+    if eval_venv:
+      eval_roller =  Roller(
+          act_fn=model.act,
+          venv=eval_venv,
+          initial_state=model.initial_state(venv.num),
+          keep_buf=100,
+          keep_non_rolling=None
+      )
     while True:
         store_segs = n_pi != 0 and n_aux_epochs != 0
 
@@ -253,6 +270,7 @@ def learn(
             interacts_total=interacts_total,
             store_segs=store_segs,
             comm=comm,
+            which_aug=which_aug,
             **ppo_hps,
         )
 
@@ -274,3 +292,15 @@ def learn(
                 )
                 logger.dumpkvs()
             segs.clear()
+        if eval_venv:
+            eval_roller.multi_step(4000)
+            logger.logkv("EvalEpMean", sum(eval_roller.recent_eprets)/len(eval_roller.recent_eprets))
+            eval_roller.clear_episode_bufs()
+            eval_roller.clear_per_env_episode_buf()
+            eval_roller.clear_non_rolling_episode_buf()
+            logger.dumpkvs()
+
+
+
+
+

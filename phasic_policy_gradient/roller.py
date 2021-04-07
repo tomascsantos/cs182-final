@@ -7,6 +7,14 @@ from . import torch_util as tu
 from .tree_util import tree_map
 from .vec_monitor2 import VecMonitor2
 
+from .data_augs import RandGray
+from .data_augs import Cutout
+from .data_augs import Cutout_Color
+from .data_augs import Rand_Flip
+from .data_augs import Rand_Rotate
+from .data_augs import Rand_Crop
+from .data_augs import ColorJitterLayer
+
 class Roller:
     def __init__(
         self,
@@ -18,6 +26,7 @@ class Roller:
         keep_sep_eps: "keep buffer of per-env episodes in VecMonitor2" = False,
         keep_non_rolling: "also keep a non-rolling buffer of episode stats" = False,
         keep_cost: "keep per step costs and add to segment" = False,
+        which_aug=None
     ):
         """
             All outputs from public methods are torch arrays on default device
@@ -29,6 +38,7 @@ class Roller:
                 keep_buf=keep_buf,
                 keep_sep_eps=keep_sep_eps,
                 keep_non_rolling=keep_non_rolling,
+                which_aug=which_aug
             )
         self._venv = venv
         self._step_count = 0
