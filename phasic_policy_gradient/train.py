@@ -49,7 +49,7 @@ def train_fn(env_name="fruitbot",
 
     venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode, num_levels=100, start_level=0)
     print(venv, env_name, distribution_mode)
-    eval_venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode, num_levels=10, start_level=100)
+    eval_venv = get_venv(num_envs=num_envs, env_name=env_name, distribution_mode=distribution_mode, num_levels=25, start_level=100)
     enc_fn = lambda obtype: ImpalaEncoder(
         obtype.shape,
         outsize=256,
@@ -104,7 +104,7 @@ def main():
     args = parser.parse_args()
 
     comm = MPI.COMM_WORLD
-    aug_to_func = {    
+    aug_to_func = {
                     'gray':RandGray,
                     'cutout':Cutout,
                     'cutout_color':Cutout_Color,

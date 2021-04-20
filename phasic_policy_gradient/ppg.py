@@ -293,14 +293,11 @@ def learn(
                 logger.dumpkvs()
             segs.clear()
         if eval_venv:
+            model.eval()
             eval_roller.multi_step(4000)
             logger.logkv("EvalEpMean", sum(eval_roller.recent_eprets)/len(eval_roller.recent_eprets))
             eval_roller.clear_episode_bufs()
             eval_roller.clear_per_env_episode_buf()
             eval_roller.clear_non_rolling_episode_buf()
             logger.dumpkvs()
-
-
-
-
-
+            model.train()
