@@ -28,8 +28,8 @@ python -m phasic_policy_gradient.train --log_dir [logging directory name] --num_
 
 
 ## Logging Name Syntax
-Most of the runs are named using the following convention ppg_{num envs}_{num eval levels}_{num training levels}_{optional: data augmentation}
-So the run ppg_16_all_50_crop is ppg run with the crop augmentation run on 50 training levels and infinite evaluation levels starting at 50.  So training is done on levels [0, 49] and evaluation is on [50, infinity]
+Most of the runs are named using the following convention ppg\_{num envs}\_{num eval levels}\_{num training levels}\_{optional: data augmentation}
+So the run ppg\_16\_all\_50\_crop is ppg run with the crop augmentation run on 50 training levels and infinite evaluation levels starting at 50.  So training is done on levels [0, 49] and evaluation is on [50, infinity]
 
 In csv logs the key columns are: B: EpLenMean (Average length of an episode), C: EpRewMean (Average reward in training episodes), I: Misc/InteractCount (Number of environment steps), AG: EvalEpMean (Average reward in evaluation Episodes, collected less frequently)
 
