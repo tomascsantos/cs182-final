@@ -23,7 +23,7 @@ It comes preinstalled with torch==1.8.1+cu101, but torch==1.4.0 also works and v
 In addition one can use conda and the environment.yml file located in the repo.  We included a .ipynb for colab use that contains everything needed to run
 
 ## Reproduce and Visualize Results
-python -m phasic_policy_gradient.train --log_dir [logging directory name] --num_levels [number of training levels, default=100] --data_aug [gray, cutout, cutout_color, flip, rotate, color_jitter, crop, None, default=None]
+python -m rl_project.train --log_dir [logging directory name] --num_levels [number of training levels, default=100] --data_aug [gray, cutout, cutout_color, flip, rotate, color_jitter, crop, None, default=None]
 
 
 
